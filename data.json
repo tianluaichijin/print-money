@@ -127,14 +127,15 @@
           "id": "6sn1h1r",
           "date": "11/1",
           "docName": "英语小作文",
-          "person": "张启航",
+          "person": "张其杭",
           "amount": 3,
           "paid": true,
           "payType": "offline",
           "modeMark": "pool",
           "pointEarned": 0,
           "poolContrib": 0.06,
-          "pointUsed": 0
+          "pointUsed": 0,
+          "noEarn": false
         }
       ]
     },
@@ -147,7 +148,6 @@
   "globalMode": "pool",
   "poolTotalWeight": 1.2,
   "userPool": {
-    "张启航": 0.06,
     "周润飞": 0.06,
     "李宇翰": 0.06,
     "刘一弘": 0.15,
@@ -156,7 +156,8 @@
     "甄琳": 0.15,
     "程苏雅": 0.06,
     "鄂岱昂": 0.3,
-    "靳岩杰": 0.15
+    "靳岩杰": 0.15,
+    "张其杭": 0.06
   },
   "userPoint": {}
 }
