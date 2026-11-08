@@ -1,0 +1,162 @@
+{
+  "weeks": {
+    "2026-10-12": {
+      "records": [
+        {
+          "id": "mtq1d8d",
+          "date": "10/18",
+          "docName": "英语小作文默写",
+          "person": "周润飞",
+          "amount": 3,
+          "paid": true,
+          "payType": "offline",
+          "modeMark": "pool",
+          "pointEarned": 0,
+          "poolContrib": 0.06,
+          "pointUsed": 0
+        },
+        {
+          "id": "z526y6t",
+          "date": "10/18",
+          "docName": "英语小作文默写",
+          "person": "李宇翰",
+          "amount": 3,
+          "paid": true,
+          "payType": "offline",
+          "modeMark": "pool",
+          "pointEarned": 0,
+          "poolContrib": 0.06,
+          "pointUsed": 0
+        },
+        {
+          "id": "rqvjqoi",
+          "date": "10/18",
+          "docName": "英语小作文默写",
+          "person": "刘一弘",
+          "amount": 3,
+          "paid": true,
+          "payType": "online",
+          "modeMark": "pool",
+          "pointEarned": 0,
+          "poolContrib": 0.15,
+          "pointUsed": 0
+        },
+        {
+          "id": "7yw7qg0",
+          "date": "10/18",
+          "docName": "英语小作文默写",
+          "person": "周代勇",
+          "amount": 3,
+          "paid": true,
+          "payType": "offline",
+          "modeMark": "pool",
+          "pointEarned": 0,
+          "poolContrib": 0.06,
+          "pointUsed": 0
+        },
+        {
+          "id": "ql30js4",
+          "date": "10/18",
+          "docName": "英语小作文默写",
+          "person": "刘恒宇",
+          "amount": 3,
+          "paid": true,
+          "payType": "online",
+          "modeMark": "pool",
+          "pointEarned": 0,
+          "poolContrib": 0.15,
+          "pointUsed": 0
+        },
+        {
+          "id": "ordia2c",
+          "date": "10/18",
+          "docName": "英语小作文默写",
+          "person": "甄琳",
+          "amount": 3,
+          "paid": true,
+          "payType": "online",
+          "modeMark": "pool",
+          "pointEarned": 0,
+          "poolContrib": 0.15,
+          "pointUsed": 0
+        },
+        {
+          "id": "6no0ikd",
+          "date": "10/18",
+          "docName": "英语小作文默写",
+          "person": "程苏雅",
+          "amount": 3,
+          "paid": true,
+          "payType": "offline",
+          "modeMark": "pool",
+          "pointEarned": 0,
+          "poolContrib": 0.06,
+          "pointUsed": 0
+        },
+        {
+          "id": "38q21nz",
+          "date": "10/18",
+          "docName": "语文作文",
+          "person": "鄂岱昂",
+          "amount": 6,
+          "paid": true,
+          "payType": "online",
+          "modeMark": "pool",
+          "pointEarned": 0,
+          "poolContrib": 0.3,
+          "pointUsed": 0
+        },
+        {
+          "id": "er56ada",
+          "date": "10/24",
+          "docName": "英语小作文默写",
+          "person": "靳岩杰",
+          "amount": 3,
+          "paid": true,
+          "payType": "online",
+          "modeMark": "pool",
+          "pointEarned": 0,
+          "poolContrib": 0.15,
+          "pointUsed": 0
+        }
+      ]
+    },
+    "2026-10-26": {
+      "records": [
+        {
+          "id": "6sn1h1r",
+          "date": "11/1",
+          "docName": "英语小作文",
+          "person": "张启航",
+          "amount": 3,
+          "paid": true,
+          "payType": "offline",
+          "modeMark": "pool",
+          "pointEarned": 0,
+          "poolContrib": 0.06,
+          "pointUsed": 0
+        }
+      ]
+    },
+    "2026-11-02": {
+      "records": []
+    }
+  },
+  "names": [],
+  "trash": [],
+  "globalMode": "pool",
+  "poolTotalWeight": 1.2,
+  "userPool": {
+    "张启航": 0.06,
+    "周润飞": 0.06,
+    "李宇翰": 0.06,
+    "刘一弘": 0.15,
+    "周代勇": 0.06,
+    "刘恒宇": 0.15,
+    "甄琳": 0.15,
+    "程苏雅": 0.06,
+    "鄂岱昂": 0.3,
+    "靳岩杰": 0.15
+  },
+  "userPoint": {}
+}

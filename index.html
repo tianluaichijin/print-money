@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>打印记录查询 · 积分</title>
+<script>
+/* 尽早应用主题，避免首屏闪白 */
+(function(){
+  try{
+    var t = localStorage.getItem('print-viewer-theme');
+    if(t !== 'dark' && t !== 'light'){
+      t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    document.documentElement.setAttribute('data-theme', t);
+  }catch(e){}
+})();
+</script>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>¥</text></svg>">
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#fff; --line:#e5e7eb; --text:#1f2937;
+    --muted:#6b7280; --accent:#2563eb; --paid:#16a34a; --unpaid:#dc2626;
+    --radius:10px;
+    --ghost:#eef2f7; --ghost-hover:#e2e8f0;
+    --soft:#f8fafc; --soft2:#f8fbff;
+    --track:#eef2f7;
+    --danger-bg:#fee2e2; --ok-bg:#dcfce7;
+    --accent-soft:#eff6ff; --accent-line:#bfdbfe;
+    --ok-soft:#f0fdf4; --ok-line:#bbf7d0;
+    --shadow:0 10px 40px rgba(0,0,0,.06);
+    color-scheme:light;
+  }
+  html[data-theme="dark"]{
+    --bg:#0e1116; --card:#171b22; --line:#272d38; --text:#e6e9ef;
+    --muted:#98a1b2; --accent:#3b82f6; --paid:#34d399; --unpaid:#f87171;
+    --ghost:#232935; --ghost-hover:#2c3341;
+    --soft:#1b2028; --soft2:#17212f;
+    --track:#252b36;
+    --danger-bg:#3a1d21; --ok-bg:#12301f;
+    --accent-soft:#14243a; --accent-line:#1e3a5f;
+    --ok-soft:#10231a; --ok-line:#14532d;
+    --shadow:0 10px 40px rgba(0,0,0,.55);
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--text);padding:16px;max-width:900px;margin:0 auto;font-size:15px;
+  }
+  h1{font-size:20px;font-weight:700;margin-bottom:2px}
+  .sub{color:var(--muted);font-size:13px}
+  button{
+    border:none;border-radius:7px;padding:8px 14px;font-size:14px;cursor:pointer;
+    background:var(--accent);color:#fff;transition:background .18s ease,color .18s ease,opacity .18s ease,transform .12s ease;
+  }
+  button:active:not(:disabled){transform:scale(.97)}
+  button:disabled{opacity:.45;cursor:not-allowed}
+  button.ghost{background:var(--ghost);color:var(--text)}
+  button.ghost:hover:not(:disabled){background:var(--ghost-hover)}
+  button.small{padding:6px 12px;font-size:13px}
+  .f-btn.active{background:var(--accent);color:#fff;box-shadow:0 0 0 3px var(--accent-soft)}
+  .topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+  .top-actions{display:flex;gap:6px;flex-wrap:wrap}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
+  .card h2{font-size:15px;font-weight:600;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .card h2 .hint{font-size:12px;color:var(--muted);font-weight:400}
+  /* 数据源条 */
+  .source-bar{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;
+    background:var(--soft);border:1px dashed var(--line);border-radius:9px;
+    padding:9px 12px;font-size:12px;color:var(--muted);margin-bottom:12px;
+  }
+  .source-bar b{color:var(--text);font-weight:600}
+  .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--muted);margin-right:6px;vertical-align:middle}
+  .dot.ok{background:var(--paid)}
+  .dot.warn{background:#f59e0b}
+  .name-gate{display:flex;gap:8px;flex-wrap:wrap}
+  .name-gate input{
+    flex:1;min-width:170px;padding:9px 12px;border-radius:8px;border:1px solid var(--line);
+    background:var(--soft);color:var(--text);font-size:15px;font-family:inherit;outline:none;
+    transition:border-color .18s ease,background .18s ease,box-shadow .18s ease;
+  }
+  .name-gate input::placeholder{color:var(--muted)}
+  .name-gate input:focus{border-color:var(--accent);background:var(--card);box-shadow:0 0 0 3px var(--accent-soft)}
+  .gate-err{display:none;margin-top:9px;font-size:12.5px;color:var(--unpaid);line-height:1.6}
+  .gate-tip{margin-top:10px;font-size:12px;color:var(--muted);line-height:1.7}
+  .drop-hint{
+    display:none;border:1px dashed var(--accent-line);background:var(--accent-soft);color:var(--accent);
+    border-radius:9px;padding:10px 14px;font-size:13px;margin-bottom:12px;
+  }
+  body.dragging .drop-hint{display:block}
+  /* 选择人 */
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{
+    background:var(--ghost);color:var(--text);border:1px solid transparent;
+    padding:7px 14px;border-radius:999px;font-size:14px;font-weight:500;
+  }
+  .chip:hover{background:var(--ghost-hover)}
+  .chip.active{background:var(--accent);color:#fff}
+  .chip.active:hover{background:var(--accent)}
+  .chip .num{font-size:12px;opacity:.75;margin-left:5px;font-variant-numeric:tabular-nums}
+  .chip.active{box-shadow:0 0 0 3px var(--accent-soft)}
+  /* 积分主卡 */
+  .hero-label{font-size:13px;color:var(--muted);margin-bottom:4px}
+  .hero-num{font-size:34px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--accent);line-height:1.15}
+  .hero-num small{font-size:14px;font-weight:600;color:var(--muted);margin-left:4px}
+  .hero-side{display:flex;gap:8px;flex-wrap:wrap}
+  .pill{
+    display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;
+    font-size:12px;background:var(--ghost);color:var(--text);font-variant-numeric:tabular-nums;white-space:nowrap;
+  }
+  .pill.accent{background:var(--accent-soft);color:var(--accent)}
+  .pill.ok{background:var(--ok-bg);color:var(--paid)}
+  .pill.warn{background:#fff7ed;color:#c2410c}
+  html[data-theme="dark"] .pill.warn{background:#3b2a12;color:#fbbf24}
+  .grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
+  .stat .label{font-size:12px;color:var(--muted);margin-bottom:4px}
+  .stat .value{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+  .stat .value.red{color:var(--unpaid)}
+  .stat .value.green{color:var(--paid)}
+  /* 表 */
+  .toolbar{display:flex;gap:6px;flex-wrap:wrap}
+  .table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:var(--radius)}
+  table{width:100%;border-collapse:collapse;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;table-layout:fixed;min-width:560px}
+  th,td{padding:9px 10px;border-bottom:1px solid var(--line);font-size:13px;vertical-align:middle}
+  th{font-size:12px;color:var(--muted);font-weight:500;background:var(--soft);text-align:left}
+  tr:last-child td{border-bottom:none}
+  td.num,th.num{text-align:right;font-variant-numeric:tabular-nums}
+  td.doc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .week-cell{font-variant-numeric:tabular-nums;color:var(--muted);font-size:12px;white-space:nowrap}
+  .tag{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;line-height:17px;white-space:nowrap}
+  .tag.point{background:var(--accent-soft);color:var(--accent)}
+  .tag.pool{background:var(--accent-soft);color:var(--accent)}
+  .tag.used{background:var(--ghost);color:var(--muted)}
+  .tag.old{background:var(--ghost);color:var(--muted)}
+  .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;min-width:48px;text-align:center;white-space:nowrap}
+  .badge.paid{background:var(--ok-bg);color:var(--paid)}
+  .badge.unpaid{background:var(--danger-bg);color:var(--unpaid)}
+  .way{font-size:13px;color:var(--muted)}
+  /* 手机端账单卡片列表（表格在窄屏隐藏） */
+  .bill-list{display:none}
+  .bill-item{border-bottom:1px solid var(--line);padding:10px 2px}
+  .bill-item:last-child{border-bottom:none}
+  .bill-row1{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+  .bill-doc{font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .bill-amt{font-weight:600;font-variant-numeric:tabular-nums;flex-shrink:0}
+  .bill-row2{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:6px;font-size:12px;color:var(--muted)}
+  /* 每周消费 */
+  .week-list .item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .week-list .item:last-child{border-bottom:none}
+  .week-list .name{font-size:12px;color:var(--muted);min-width:108px;font-variant-numeric:tabular-nums}
+  .week-list .track{flex:1;height:9px;background:var(--track);border-radius:5px;overflow:hidden;min-width:80px}
+  .week-list .bar{height:100%;background:var(--accent);border-radius:5px;min-width:2px}
+  .week-list .amt{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;min-width:64px;text-align:right}
+  .week-list .item.is-cur .name{color:var(--accent);font-weight:600}
+  /* 空态 */
+  .empty{text-align:center;color:var(--muted);padding:34px 10px;font-size:14px;line-height:1.8}
+  .empty b{color:var(--text)}
+  /* 规则 */
+  .rules{font-size:12px;color:var(--muted);line-height:1.9}
+  .rules b{color:var(--text)}
+  .foot{margin:16px 0 6px;font-size:12px;color:var(--muted);text-align:center;line-height:1.8}
+  .warn-note{
+    font-size:12px;color:#c2410c;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;
+    padding:8px 12px;margin-top:8px;line-height:1.7;
+  }
+  html[data-theme="dark"] .warn-note{background:#3b2a12;border-color:#7c4a12;color:#fbbf24}
+  @media(max-width:600px){
+    body{padding:10px}
+    .grid4{grid-template-columns:repeat(2,1fr)}
+    .top-actions button{padding:6px 9px;font-size:13px}
+    .hero-num{font-size:28px}
+    h1{font-size:18px}
+    th,td{padding:7px 6px;font-size:12px}
+    .week-list .name{min-width:92px}
+    .table-wrap{display:none}
+    .bill-list{display:block}
+  }
+  /* 打印 */
+  .print-head{display:none;justify-content:space-between;align-items:baseline;gap:12px;
+    border-bottom:2px solid var(--text);padding-bottom:8px;margin:2px 0 14px}
+  .print-head .ph-name{font-size:18px;font-weight:600}
+  .print-head .ph-meta{font-size:12px;color:var(--muted)}
+  @media print{
+    html,body{background:#fff;color:#000}
+    body{max-width:none;padding:0;font-size:12px}
+    .topbar,.source-bar,.toolbar,#pickCard,.no-print{display:none !important}
+    .card{border:1px solid #ddd;box-shadow:none;break-inside:avoid}
+    table{min-width:0}
+    .table-wrap{overflow:visible}
+    a{color:#000}
+    .print-head{display:flex}
+    .foot{display:none}
+  }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div>
+    <h1>打印记录查询</h1>
+    <div class="sub">只读查看 · 积分与每笔打印账单</div>
+  </div>
+  <div class="top-actions">
+    <button class="ghost small" id="themeBtn" title="切换深色 / 浅色" aria-pressed="false"><span id="themeText">🌙 深色</span></button>
+    <button class="ghost small" id="importBtn">导入 JSON</button>
+    <button class="ghost small" id="exportBtn" disabled>导出我的分享文件</button>
+    <button class="ghost small" id="switchBtn" style="display:none">换个人</button>
+    <button class="ghost small" id="printBtn" disabled>打印</button>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept=".json,application/json" style="display:none">
+
+<div class="source-bar" id="sourceBar">
+  <span><span class="dot" id="srcDot"></span><b id="srcText">等待数据</b></span>
+  <span id="srcMeta">支持记账本导出的备份 JSON</span>
+</div>
+<div class="drop-hint">松开鼠标，导入 JSON 文件</div>
+
+<div class="card" id="pickCard" style="display:none">
+  <h2 id="gateTitle">输入你的名字 <span class="hint">只看自己的打印记录与积分</span></h2>
+  <div class="name-gate">
+    <input id="nameInput" type="text" maxlength="24" autocomplete="off" placeholder="例如：张三">
+    <button class="small" id="nameGo">查看我的记录</button>
+  </div>
+  <div class="gate-err" id="gateErr"></div>
+  <div class="gate-tip">名字要和记账时的写法一致（中间不用空格）；本周新得的积分下周才能抵扣。</div>
+</div>
+
+<div id="emptyCard" class="card">
+  <div class="empty">
+    <b>还没有数据</b><br>
+    点右上角「导入 JSON」选择记账本导出的备份文件，<br>或把 <b>data.json</b> 放在本页同目录（支持 <b>?data=</b> 指定文件）。
+    <div class="warn-note">隐私提示：如果把这个 JSON 放进公开仓库，所有人都能看到全部人的账单。只想给某个人看时，用「导出我的分享文件」生成只含自己的文件，再单独发给 TA。</div>
+  </div>
+</div>
+
+<div id="panel" style="display:none">
+  <div class="print-head">
+    <span class="ph-name" id="phName"></span>
+    <span class="ph-meta" id="phMeta"></span>
+  </div>
+  <!-- 积分主卡 -->
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap">
+      <div>
+        <div class="hero-label" id="heroLabel">可用积分（本周可抵扣）</div>
+        <div class="hero-num"><span id="usableNum">0</span><small>分</small></div>
+      </div>
+      <div class="hero-side" id="heroPills"></div>
+    </div>
+    <div style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.7" id="usableHint"></div>
+  </div>
+
+  <!-- 概览 -->
+  <div class="grid4" style="margin-bottom:12px">
+    <div class="stat"><div class="label">累计消费</div><div class="value" id="sTotal">¥0.00</div></div>
+    <div class="stat"><div class="label">已付</div><div class="value green" id="sPaid">¥0.00</div></div>
+    <div class="stat"><div class="label">未付（欠款）</div><div class="value red" id="sUnpaid">¥0.00</div></div>
+    <div class="stat"><div class="label">打印笔数</div><div class="value" id="sCount">0</div></div>
+  </div>
+
+  <!-- 积分明细 -->
+  <div class="card">
+    <h2>积分明细 <span class="hint">15 分抵 1 元，仅线上支付可用</span></h2>
+    <div class="grid4">
+      <div class="stat"><div class="label">累计获得</div><div class="value" id="pEarned">0</div></div>
+      <div class="stat"><div class="label">已抵扣</div><div class="value" id="pUsed">0</div></div>
+      <div class="stat"><div class="label">下周可用</div><div class="value" id="pPending">0</div></div>
+      <div class="stat"><div class="label">可抵金额</div><div class="value" id="pValue">¥0.00</div></div>
+    </div>
+    <div style="margin-top:10px;font-size:12px;color:var(--muted)" id="poolLine"></div>
+  </div>
+
+  <!-- 账单 -->
+  <div class="card">
+    <h2>我的打印账单
+      <span class="toolbar no-print">
+        <button class="ghost small f-btn active" data-filter="all">全部</button>
+        <button class="ghost small f-btn" data-filter="week">本周</button>
+        <button class="ghost small f-btn" data-filter="unpaid">未付</button>
+        <button class="ghost small f-btn" data-filter="deduct">已抵扣</button>
+      </span>
+    </h2>
+    <div class="table-wrap">
+      <table>
+        <colgroup>
+          <col style="width:148px"><col style="width:64px"><col><col style="width:84px"><col style="width:82px"><col style="width:72px"><col style="width:128px">
+        </colgroup>
+        <thead>
+          <tr>
+            <th>所在周</th>
+            <th>日期</th>
+            <th>文档名</th>
+            <th class="num">金额(元)</th>
+            <th>方式</th>
+            <th>状态</th>
+            <th>积分 / 奖池</th>
+          </tr>
+        </thead>
+        <tbody id="billBody"></tbody>
+      </table>
+    </div>
+    <div class="bill-list" id="billList"></div>
+    <div id="billEmpty" class="empty" style="display:none">没有符合条件的记录。</div>
+  </div>
+
+  <!-- 每周消费 -->
+  <div class="card" id="weekCard" style="display:none">
+    <h2>每周消费 <span class="hint">仅统计本人</span></h2>
+    <div class="week-list" id="weekList"></div>
+  </div>
+
+  <!-- 规则 -->
+  <div class="card">
+    <h2>积分规则</h2>
+    <div class="rules">
+      · 只有<b>线上支付</b>的账单才能用积分抵扣，线下支付不可抵扣。<br>
+      · 本周新计入的积分 <b>下一周</b>才能使用；本周只能用之前攒下的积分（1 元 = 1 分）。<br>
+      · 用了积分抵扣的那笔账单，<b>不再产生</b>新积分，也不计入奖池奖金。<br>
+      · 抵扣比例：<b>15 积分抵 1 元</b>。
+    </div>
+  </div>
+</div>
+
+<div class="foot">
+  数据只在你的浏览器里解析，不上传任何服务器<br>
+  页面与记账本数据文件分离，改数据只需替换 JSON
+</div>
+
+<script>
+(function(){
+  'use strict';
+  var POINT_PER_YUAN = 15;
+  var THEME_KEY = 'print-viewer-theme';
+  var NAME_KEY  = 'print-viewer-name';
+  var store = null;      // { weeks, persons, userPoint, userPool, single, fileName }
+  var curPerson = '';
+  var curFilter = 'all';
+  var fileName = '';
+
+  /* ============ 小工具 ============ */
+  function round2(n){ return Math.round((Number(n) || 0) * 100) / 100; }
+  function clamp0(n){ return Math.max(0, round2(n)); }
+  function fmt(n){ return (Math.round((Number(n) || 0) * 100) / 100).toFixed(2); }
+  function esc(s){
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){
+      return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+    });
+  }
+  function pad2(n){ return String(n).padStart(2,'0'); }
+  function dateKey(d){
+    return d.getFullYear() + '-' + pad2(d.getMonth()+1) + '-' + pad2(d.getDate());
+  }
+  // 周一作为一周的 key（与记账本一致）
+  function mondayKey(d){
+    var x = new Date(d || new Date());
+    var day = x.getDay() || 7;
+    x.setDate(x.getDate() - day + 1);
+    return dateKey(x);
+  }
+  function fmtRange(key){
+    var s = new Date(key);
+    if(isNaN(s.getTime())) return key;
+    var e = new Date(s); e.setDate(e.getDate() + 6);
+    var f = function(d){ return (d.getMonth()+1) + '/' + d.getDate(); };
+    return f(s) + ' - ' + f(e);
+  }
+
+  /* ============ 读取 / 兼容 ============ */
+  function normRec(r){
+    if(!r || typeof r !== 'object') return null;
+    var person = String(r.person == null ? '' : r.person).trim();
+    var mode = r.modeMark === 'point' || r.modeMark === 'pool' ? r.modeMark : '';
+    return {
+      date: String(r.date == null ? '' : r.date),
+      docName: String(r.docName == null ? '' : r.docName),
+      person: person,
+      amount: clamp0(r.amount),
+      payType: r.payType === 'offline' ? 'offline' : 'online',
+      paid: !!r.paid,
+      modeMark: mode,
+      pointEarned: clamp0(r.pointEarned),
+      pointUsed: clamp0(r.pointUsed),
+      poolContrib: clamp0(r.poolContrib)
+    };
+  }
+  // 兼容两种文件：记账本完整备份 / 本站导出的单人分享文件
+  function normalize(raw){
+    if(!raw || typeof raw !== 'object' || !raw.weeks || typeof raw.weeks !== 'object'){
+      throw new Error('不是记账本导出的 JSON（缺少 weeks 字段）');
+    }
+    var weeks = {};
+    Object.keys(raw.weeks).forEach(function(k){
+      if(!/^\d{4}-\d{2}-\d{2}$/.test(k)) return;
+      var w = raw.weeks[k] || {};
+      var arr = Array.isArray(w.records) ? w.records : [];
+      var recs = [];
+      arr.forEach(function(r){ var n = normRec(r); if(n) recs.push(n); });
+      weeks[k] = { records: recs };
+    });
+    var persons = {}, up = {}, ug = {};
+    Object.keys(weeks).forEach(function(k){
+      weeks[k].records.forEach(function(r){ if(r.person) persons[r.person] = 1; });
+    });
+    if(raw.userPoint && typeof raw.userPoint === 'object' && !Array.isArray(raw.userPoint)){
+      Object.keys(raw.userPoint).forEach(function(n){ if(n) { up[n] = clamp0(raw.userPoint[n]); persons[n] = 1; } });
+    }
+    if(raw.userPool && typeof raw.userPool === 'object' && !Array.isArray(raw.userPool)){
+      Object.keys(raw.userPool).forEach(function(n){ if(n) { ug[n] = clamp0(raw.userPool[n]); persons[n] = 1; } });
+    }
+    var list = Object.keys(persons).sort(function(a,b){ return a.localeCompare(b, 'zh-Hans-CN'); });
+    var single = String(raw.person == null ? '' : raw.person).trim();
+    if(!single && list.length === 1) single = list[0];
+    return { weeks: weeks, persons: list, userPoint: up, userPool: ug, single: single, mode: raw.globalMode || '' };
+  }
+
+  /* ============ 积分计算（与记账本同一套规则）============ */
+  function balance(name){ return clamp0(store.userPoint[name]); }
+  function ledger(name){
+    var earned = 0, used = 0, touched = false;
+    Object.keys(store.weeks).forEach(function(k){
+      store.weeks[k].records.forEach(function(r){
+        if(r.person !== name) return;
+        if(r.pointEarned || r.pointUsed) touched = true;
+        earned += r.pointEarned;
+        used += r.pointUsed;
+      });
+    });
+    return { earned: round2(earned), used: round2(used), touched: touched };
+  }
+  // 可用：只算本周之前获得的积分，扣掉所有已用
+  function usable(name, ref){
+    var L = ledger(name);
+    if(!L.touched) return balance(name);       // 只有余额、没有流水（如导入）
+    var before = 0;
+    Object.keys(store.weeks).forEach(function(k){
+      if(k >= ref) return;
+      store.weeks[k].records.forEach(function(r){
+        if(r.person === name) before += r.pointEarned;
+      });
+    });
+    return clamp0(before - L.used);
+  }
+  // 下周可用：本周及以后新计入的积分
+  function pending(name, ref){
+    var p = 0;
+    Object.keys(store.weeks).forEach(function(k){
+      if(k < ref) return;
+      store.weeks[k].records.forEach(function(r){
+        if(r.person === name) p += r.pointEarned;
+      });
+    });
+    return clamp0(p);
+  }
+  function personRecords(name){
+    var out = [];
+    Object.keys(store.weeks).sort().reverse().forEach(function(k){
+      store.weeks[k].records.forEach(function(r){
+        if(r.person === name) out.push({ wk: k, rec: r });
+      });
+    });
+    return out;
+  }
+  function valueText(r){
+    if(r.pointUsed > 0){
+      var isPool = r.modeMark === 'pool';
+      var tip = '本笔已用 ' + fmt(r.pointUsed) + ' 分抵扣，不再产生' + (isPool ? '奖池奖金' : '新积分');
+      return '<span class="tag used" title="' + tip + '">已抵扣 ' + fmt(r.pointUsed) + ' 分</span>';
+    }
+    if(!r.modeMark) return '<span class="tag old">—</span>';
+    if(r.modeMark === 'pool') return '<span class="tag pool">奖池 ¥' + fmt(r.poolContrib) + '</span>';
+    return '<span class="tag point">+' + fmt(r.pointEarned) + ' 分</span>';
+  }
+
+  /* ============ 姓名入口 ============ */
+  function normName(s){ return String(s || '').replace(/\s+/g, '').toLowerCase(); }
+
+  function findPerson(q){
+    q = String(q || '').trim();
+    if(!q) return '';
+    var hit = store.persons.filter(function(n){ return n === q; })[0];
+    if(hit) return hit;
+    var nq = normName(q);
+    return store.persons.filter(function(n){ return normName(n) === nq; })[0] || '';
+  }
+
+  function gateError(msg){
+    var el = document.getElementById('gateErr');
+    el.textContent = msg || '';
+    el.style.display = msg ? 'block' : 'none';
+  }
+
+  // 出现姓名入口：没人名的数据（多人备份）都先停在这里
+  function showGate(prefill){
+    var card = document.getElementById('pickCard');
+    var multi = store.persons.length > 1;
+    document.getElementById('panel').style.display = 'none';
+    card.style.display = multi ? '' : 'none';
+    document.getElementById('switchBtn').style.display = 'none';
+    document.getElementById('exportBtn').disabled = true;
+    document.getElementById('printBtn').disabled = true;
+    if(!multi) return;
+    var input = document.getElementById('nameInput');
+    input.value = prefill || '';
+    gateError('');
+    setTimeout(function(){ try{ input.focus(); }catch(e){} }, 60);
+  }
+
+  function enterPerson(name){
+    curPerson = name;
+    try{ localStorage.setItem(NAME_KEY, name); }catch(e){}
+    document.getElementById('pickCard').style.display = 'none';
+    gateError('');
+    renderPanel();
+    document.getElementById('switchBtn').style.display = store.persons.length > 1 ? '' : 'none';
+    document.getElementById('exportBtn').disabled = false;
+    document.getElementById('printBtn').disabled = false;
+  }
+
+  function submitGate(){
+    var raw = document.getElementById('nameInput').value;
+    var q = String(raw || '').trim();
+    if(!q){ gateError('请输入名字'); return; }
+    var p = findPerson(q);
+    if(!p){
+      gateError('没找到「' + q + '」，请确认名字写法（中间不要带空格，或问一下记账的人）');
+      return;
+    }
+    enterPerson(p);
+  }
+
+  function selectPerson(name){ enterPerson(name); }
+
+  function renderPanel(){
+    var name = curPerson;
+    var ref = mondayKey();
+    var recs = personRecords(name);
+    var L = ledger(name);
+    var can = usable(name, ref);
+    var pend = pending(name, ref);
+    var poolW = store.userPool[name] || 0;
+
+    var total = 0, paid = 0;
+    recs.forEach(function(x){ total += x.rec.amount; if(x.rec.paid) paid += x.rec.amount; });
+    var thisWeekTotal = 0, thisWeekCount = 0;
+    recs.forEach(function(x){ if(x.wk === ref){ thisWeekTotal += x.rec.amount; thisWeekCount++; } });
+
+    document.getElementById('heroLabel').textContent = name + ' · 可用积分（本周可抵扣）';
+    document.getElementById('usableNum').textContent = fmt(can);
+    document.getElementById('phName').textContent = name + ' · 打印记录与积分';
+    document.getElementById('phMeta').textContent = '可用 ' + fmt(can) + ' 分（抵 ¥' + fmt(can / POINT_PER_YUAN) + '）' +
+      (pend > 0 ? ' · 下周可用 ' + fmt(pend) + ' 分' : '') + ' · 共 ' + recs.length + ' 笔 ¥' + fmt(total);
+    document.getElementById('sTotal').textContent = '¥' + fmt(total);
+    document.getElementById('sPaid').textContent = '¥' + fmt(paid);
+    document.getElementById('sUnpaid').textContent = '¥' + fmt(total - paid);
+    document.getElementById('sCount').textContent = recs.length;
+    document.getElementById('pEarned').textContent = fmt(L.earned) + ' 分';
+    document.getElementById('pUsed').textContent = fmt(L.used) + ' 分';
+    document.getElementById('pPending').textContent = fmt(pend) + ' 分';
+    document.getElementById('pValue').textContent = '¥' + fmt(can / POINT_PER_YUAN);
+
+    var pills = [];
+    pills.push('<span class="pill accent">本周消费 ¥' + fmt(thisWeekTotal) + ' · ' + thisWeekCount + ' 笔</span>');
+    if(pend > 0) pills.push('<span class="pill warn">下周可用 ' + fmt(pend) + ' 分</span>');
+    if(poolW > 0) pills.push('<span class="pill">奖池投入 ¥' + fmt(poolW) + '</span>');
+    document.getElementById('heroPills').innerHTML = pills.join('');
+
+    var hint = '本周新得积分下一周才可用；本页按“本周之前攒下的积分 − 已用积分”计算可用额度。';
+    if(pend > 0) hint += '本周新得 ' + fmt(pend) + ' 分，' + fmtRange(nextMondayKey(ref)) + ' 起可用。';
+    document.getElementById('usableHint').textContent = hint;
+
+    document.getElementById('poolLine').textContent = poolW > 0
+      ? '奖池投入 ¥' + fmt(poolW) + '（仅奖池模式账单按线上 5% / 线下 2% 计入；用积分抵扣的账单不计入）。'
+      : '本账本没有记录到你的奖池投入。';
+
+    renderBills(recs);
+    renderWeeks(recs, ref);
+    document.getElementById('panel').style.display = '';
+    document.getElementById('emptyCard').style.display = 'none';
+  }
+
+  function nextMondayKey(key){
+    var d = new Date(key);
+    if(isNaN(d.getTime())) return key;
+    d.setDate(d.getDate() + 7);
+    return dateKey(d);
+  }
+
+  function renderBills(recs){
+    var body = document.getElementById('billBody');
+    var listBox = document.getElementById('billList');
+    body.innerHTML = '';
+    listBox.innerHTML = '';
+    var ref = mondayKey();
+    var list = recs.filter(function(x){
+      if(curFilter === 'week') return x.wk === ref;
+      if(curFilter === 'unpaid') return !x.rec.paid;
+      if(curFilter === 'deduct') return x.rec.pointUsed > 0;
+      return true;
+    });
+    document.getElementById('billEmpty').style.display = list.length ? 'none' : 'block';
+    list.forEach(function(x){
+      var r = x.rec;
+      var weekTxt = fmtRange(x.wk) + (x.wk === ref ? '<span style="color:var(--accent);font-size:11px"> · 本周</span>' : '');
+      var tr = document.createElement('tr');
+      tr.innerHTML =
+        '<td class="week-cell">' + weekTxt + '</td>' +
+        '<td class="week-cell" style="color:var(--text)">' + esc(r.date || '—') + '</td>' +
+        '<td class="doc" title="' + esc(r.docName) + '">' + (esc(r.docName) || '<span style="color:var(--muted)">—</span>') + '</td>' +
+        '<td class="num">' + fmt(r.amount) + '</td>' +
+        '<td class="way">' + (r.payType === 'offline' ? '线下' : '线上') + '</td>' +
+        '<td><span class="badge ' + (r.paid ? 'paid' : 'unpaid') + '">' + (r.paid ? '已付' : '未付') + '</span></td>' +
+        '<td>' + valueText(r) + '</td>';
+      body.appendChild(tr);
+
+      // 手机端：卡片式一行记录
+      var item = document.createElement('div');
+      item.className = 'bill-item';
+      item.innerHTML =
+        '<div class="bill-row1">' +
+          '<span class="bill-doc">' + (esc(r.docName) || '（未填文档名）') + '</span>' +
+          '<span class="bill-amt">¥' + fmt(r.amount) + '</span>' +
+        '</div>' +
+        '<div class="bill-row2">' +
+          '<span>' + weekTxt + '</span>' +
+          '<span>' + esc(r.date || '—') + '</span>' +
+          '<span>' + (r.payType === 'offline' ? '线下' : '线上') + '</span>' +
+          '<span class="badge ' + (r.paid ? 'paid' : 'unpaid') + '">' + (r.paid ? '已付' : '未付') + '</span>' +
+          valueText(r) +
+        '</div>';
+      listBox.appendChild(item);
+    });
+  }
+
+  function renderWeeks(recs, ref){
+    var map = {};
+    recs.forEach(function(x){
+      if(!map[x.wk]) map[x.wk] = { total: 0, count: 0 };
+      map[x.wk].total += x.rec.amount;
+      map[x.wk].count++;
+    });
+    var keys = Object.keys(map).sort().reverse();
+    var box = document.getElementById('weekList');
+    box.innerHTML = '';
+    if(!keys.length){ document.getElementById('weekCard').style.display = 'none'; return; }
+    document.getElementById('weekCard').style.display = '';
+    var max = 0;
+    keys.forEach(function(k){ if(map[k].total > max) max = map[k].total; });
+    keys.forEach(function(k){
+      var o = map[k];
+      var wPct = max > 0 ? Math.max(2, o.total / max * 100) : 0;
+      var div = document.createElement('div');
+      div.className = 'item' + (k === ref ? ' is-cur' : '');
+      div.innerHTML =
+        '<div class="name">' + fmtRange(k) + (k === ref ? ' · 本周' : '') + '</div>' +
+        '<div class="track"><div class="bar" style="width:' + wPct + '%"></div></div>' +
+        '<div class="amt">¥' + fmt(o.total) + '</div>' +
+        '<div class="name" style="min-width:auto;color:var(--muted)">' + o.count + ' 笔</div>';
+      box.appendChild(div);
+    });
+  }
+
+  /* ============ 数据源 ============ */
+  function setSource(kind, text, meta){
+    var dot = document.getElementById('srcDot');
+    dot.className = 'dot ' + (kind === 'ok' ? 'ok' : kind === 'warn' ? 'warn' : '');
+    document.getElementById('srcText').textContent = text;
+    document.getElementById('srcMeta').textContent = meta || '';
+  }
+
+  function applyData(raw, sourceText, meta){
+    var data;
+    try{ data = normalize(raw); }
+    catch(err){ showError(err.message); return false; }
+    store = data;
+    if(!store.persons.length){
+      showError('文件里没有找到任何人员记录');
+      return false;
+    }
+    var remembered = '';
+    try{ remembered = localStorage.getItem(NAME_KEY) || ''; }catch(e){}
+    curPerson = '';
+    document.getElementById('emptyCard').style.display = 'none';
+    setSource('ok', sourceText, meta || ('共 ' + store.persons.length + ' 人 · ' + countRecords() + ' 条记录'));
+    if(store.persons.length === 1){
+      // 单人分享文件：不用输名字，直接进
+      document.getElementById('pickCard').style.display = 'none';
+      enterPerson(store.persons[0]);
+    }else{
+      showGate(remembered);
+    }
+    return true;
+  }
+
+  function countRecords(){
+    var n = 0;
+    Object.keys(store.weeks).forEach(function(k){ n += store.weeks[k].records.length; });
+    return n;
+  }
+
+  function showError(msg){
+    setSource('warn', '读取失败：' + msg, '请选择记账本「导出备份」得到的 JSON 文件');
+  }
+
+  function readFile(file){
+    if(!file) return;
+    if(!/\.json$/i.test(file.name) && file.type !== 'application/json'){
+      showError('请选择 .json 文件');
+      return;
+    }
+    var fr = new FileReader();
+    fr.onload = function(){
+      var raw;
+      try{ raw = JSON.parse(String(fr.result)); }
+      catch(e){ showError('JSON 格式不正确'); return; }
+      fileName = file.name;
+      applyData(raw, file.name, '本机文件 · ' + (file.size / 1024).toFixed(0) + ' KB');
+    };
+    fr.onerror = function(){ showError('文件读取失败'); };
+    fr.readAsText(file);
+  }
+
+  /* ============ 单人分享文件 ============ */
+  function exportMine(){
+    if(!store || !curPerson) return;
+    var name = curPerson;
+    var weeks = {};
+    Object.keys(store.weeks).forEach(function(k){
+      var arr = store.weeks[k].records.filter(function(r){ return r.person === name; });
+      if(arr.length) weeks[k] = { records: arr };
+    });
+    var out = {
+      type: 'print-book-person',
+      person: name,
+      exportedAt: new Date().toISOString(),
+      globalMode: store.mode || '',
+      weeks: weeks,
+      names: [name],
+      trash: [],
+      poolTotalWeight: store.userPool[name] || 0,
+      userPool: store.userPool[name] ? (function(){ var o = {}; o[name] = store.userPool[name]; return o; })() : {},
+      userPoint: (function(){ var o = {}; o[name] = balance(name); return o; })()
+    };
+    var blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = name + '_打印积分.json';
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+  }
+
+  /* ============ 主题 ============ */
+  function applyTheme(t){
+    document.documentElement.setAttribute('data-theme', t);
+    var dark = t === 'dark';
+    document.getElementById('themeText').textContent = dark ? '☀️ 浅色' : '🌙 深色';
+    document.getElementById('themeBtn').setAttribute('aria-pressed', dark ? 'true' : 'false');
+    try{ localStorage.setItem(THEME_KEY, t); }catch(e){}
+  }
+  document.getElementById('themeBtn').addEventListener('click', function(){
+    applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+  applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
+
+  /* ============ 交互 ============ */
+  document.getElementById('importBtn').addEventListener('click', function(){
+    document.getElementById('fileInput').click();
+  });
+  document.getElementById('fileInput').addEventListener('change', function(e){
+    readFile(e.target.files[0]);
+    e.target.value = '';
+  });
+  document.getElementById('nameGo').addEventListener('click', submitGate);
+  document.getElementById('nameInput').addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){ e.preventDefault(); submitGate(); }
+  });
+  document.getElementById('nameInput').addEventListener('input', function(){ gateError(''); });
+  document.getElementById('switchBtn').addEventListener('click', function(){
+    curPerson = '';
+    document.getElementById('panel').style.display = 'none';
+    showGate('');
+  });
+  document.getElementById('exportBtn').addEventListener('click', exportMine);
+  document.getElementById('printBtn').addEventListener('click', function(){ window.print(); });
+
+  document.querySelectorAll('.f-btn').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('.f-btn').forEach(function(x){ x.classList.remove('active'); });
+      b.classList.add('active');
+      curFilter = b.dataset.filter;
+      if(store && curPerson) renderBills(personRecords(curPerson));
+    });
+  });
+
+  // 拖拽导入
+  ['dragenter','dragover'].forEach(function(ev){
+    window.addEventListener(ev, function(e){ e.preventDefault(); document.body.classList.add('dragging'); });
+  });
+  ['dragleave','drop'].forEach(function(ev){
+    window.addEventListener(ev, function(e){ e.preventDefault(); if(ev === 'dragleave' && e.relatedTarget) return; document.body.classList.remove('dragging'); });
+  });
+  window.addEventListener('drop', function(e){
+    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if(f) readFile(f);
+  });
+
+  /* ============ 启动：?data= / ./data.json ============ */
+  function autoLoad(){
+    var qs = new URLSearchParams(location.search);
+    var url = qs.get('data') || 'data.json';
+    setSource('', '正在读取 ' + url + ' …', '');
+    fetch(url, { cache: 'no-store' }).then(function(res){
+      if(!res.ok) throw new Error('找不到 ' + url);
+      return res.json();
+    }).then(function(raw){
+      applyData(raw, '站点数据 ' + url, '');
+    }).catch(function(){
+      setSource('warn', '还没有数据', '点右上角「导入 JSON」，或把 data.json 放在本页同目录');
+      document.getElementById('panel').style.display = 'none';
+      document.getElementById('emptyCard').style.display = '';
+    });
+  }
+  autoLoad();
+})();
+</script>
+</body>
+</html>
