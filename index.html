@@ -60,6 +60,11 @@
   button.ghost:hover:not(:disabled){background:var(--ghost-hover)}
   button.small{padding:6px 12px;font-size:13px}
   .f-btn.active{background:var(--accent);color:#fff;box-shadow:0 0 0 3px var(--accent-soft)}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+  .stat .value.accent{color:var(--accent)}
+  .share-bar{height:6px;border-radius:4px;background:var(--track);margin-top:12px;overflow:hidden}
+  .share-fill{height:100%;background:var(--accent);border-radius:4px;transition:width .3s ease}
+  .pool-note{margin-top:9px;font-size:12px;color:var(--muted);line-height:1.7}
   .topbar{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:12px}
   .top-actions{display:flex;gap:6px;flex-wrap:wrap}
   .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
@@ -85,13 +90,7 @@
   .name-gate input:focus{border-color:var(--accent);background:var(--card);box-shadow:0 0 0 3px var(--accent-soft)}
   .gate-err{display:none;margin-top:9px;font-size:12.5px;color:var(--unpaid);line-height:1.6}
   .gate-tip{margin-top:10px;font-size:12px;color:var(--muted);line-height:1.7}
-  .drop-hint{
-    display:none;border:1px dashed var(--accent-line);background:var(--accent-soft);color:var(--accent);
-    border-radius:9px;padding:10px 14px;font-size:13px;margin-bottom:12px;
-  }
-  body.dragging .drop-hint{display:block}
   /* 选择人 */
-  .chips{display:flex;gap:8px;flex-wrap:wrap}
   .chip{
     background:var(--ghost);color:var(--text);border:1px solid transparent;
     padding:7px 14px;border-radius:999px;font-size:14px;font-weight:500;
@@ -162,11 +161,6 @@
   .rules{font-size:12px;color:var(--muted);line-height:1.9}
   .rules b{color:var(--text)}
   .foot{margin:16px 0 6px;font-size:12px;color:var(--muted);text-align:center;line-height:1.8}
-  .warn-note{
-    font-size:12px;color:#c2410c;background:#fff7ed;border:1px solid #fed7aa;border-radius:8px;
-    padding:8px 12px;margin-top:8px;line-height:1.7;
-  }
-  html[data-theme="dark"] .warn-note{background:#3b2a12;border-color:#7c4a12;color:#fbbf24}
   @media(max-width:600px){
     body{padding:10px}
     .grid4{grid-template-columns:repeat(2,1fr)}
@@ -204,20 +198,15 @@
   </div>
   <div class="top-actions">
     <button class="ghost small" id="themeBtn" title="切换深色 / 浅色" aria-pressed="false"><span id="themeText">🌙 深色</span></button>
-    <button class="ghost small" id="importBtn">导入 JSON</button>
-    <button class="ghost small" id="exportBtn" disabled>导出我的分享文件</button>
     <button class="ghost small" id="switchBtn" style="display:none">换个人</button>
     <button class="ghost small" id="printBtn" disabled>打印</button>
   </div>
 </div>
 
-<input type="file" id="fileInput" accept=".json,application/json" style="display:none">
-
 <div class="source-bar" id="sourceBar">
   <span><span class="dot" id="srcDot"></span><b id="srcText">等待数据</b></span>
   <span id="srcMeta">支持记账本导出的备份 JSON</span>
 </div>
-<div class="drop-hint">松开鼠标，导入 JSON 文件</div>
 
 <div class="card" id="pickCard" style="display:none">
   <h2 id="gateTitle">输入你的名字 <span class="hint">只看自己的打印记录与积分</span></h2>
@@ -232,8 +221,7 @@
 <div id="emptyCard" class="card">
   <div class="empty">
     <b>还没有数据</b><br>
-    点右上角「导入 JSON」选择记账本导出的备份文件，<br>或把 <b>data.json</b> 放在本页同目录（支持 <b>?data=</b> 指定文件）。
-    <div class="warn-note">隐私提示：如果把这个 JSON 放进公开仓库，所有人都能看到全部人的账单。只想给某个人看时，用「导出我的分享文件」生成只含自己的文件，再单独发给 TA。</div>
+    把记账本导出的 <b>data.json</b> 放到本页同目录即可。
   </div>
 </div>
 
@@ -254,6 +242,18 @@
     <div style="margin-top:12px;font-size:12px;color:var(--muted);line-height:1.7" id="usableHint"></div>
   </div>
 
+  <!-- 抽奖奖池 -->
+  <div class="card">
+    <h2>抽奖奖池 <span class="hint">中奖概率 = 我的投入 ÷ 总奖池</span></h2>
+    <div class="grid3">
+      <div class="stat"><div class="label">当前总奖池</div><div class="value" id="poolTotal">¥0.00</div></div>
+      <div class="stat"><div class="label">我的投入</div><div class="value" id="poolMine">¥0.00</div></div>
+      <div class="stat"><div class="label">我的中奖率</div><div class="value accent" id="poolPct">0.00%</div></div>
+    </div>
+    <div class="share-bar"><div class="share-fill" id="poolFill" style="width:0%"></div></div>
+    <div class="pool-note" id="poolNote"></div>
+  </div>
+
   <!-- 概览 -->
   <div class="grid4" style="margin-bottom:12px">
     <div class="stat"><div class="label">累计消费</div><div class="value" id="sTotal">¥0.00</div></div>
@@ -271,7 +271,6 @@
       <div class="stat"><div class="label">下周可用</div><div class="value" id="pPending">0</div></div>
       <div class="stat"><div class="label">可抵金额</div><div class="value" id="pValue">¥0.00</div></div>
     </div>
-    <div style="margin-top:10px;font-size:12px;color:var(--muted)" id="poolLine"></div>
   </div>
 
   <!-- 账单 -->
@@ -325,10 +324,6 @@
   </div>
 </div>
 
-<div class="foot">
-  数据只在你的浏览器里解析，不上传任何服务器<br>
-  页面与记账本数据文件分离，改数据只需替换 JSON
-</div>
 
 <script>
 (function(){
@@ -336,10 +331,9 @@
   var POINT_PER_YUAN = 15;
   var THEME_KEY = 'print-viewer-theme';
   var NAME_KEY  = 'print-viewer-name';
-  var store = null;      // { weeks, persons, userPoint, userPool, single, fileName }
+  var store = null;      // { weeks, persons, userPoint, userPool, poolTotalWeight, single }
   var curPerson = '';
   var curFilter = 'all';
-  var fileName = '';
 
   /* ============ 小工具 ============ */
   function round2(n){ return Math.round((Number(n) || 0) * 100) / 100; }
@@ -414,7 +408,9 @@
     var list = Object.keys(persons).sort(function(a,b){ return a.localeCompare(b, 'zh-Hans-CN'); });
     var single = String(raw.person == null ? '' : raw.person).trim();
     if(!single && list.length === 1) single = list[0];
-    return { weeks: weeks, persons: list, userPoint: up, userPool: ug, single: single, mode: raw.globalMode || '' };
+    var poolTotal = clamp0(Number(raw.poolTotalWeight) || 0);
+    return { weeks: weeks, persons: list, userPoint: up, userPool: ug,
+             poolTotalWeight: poolTotal, single: single, mode: raw.globalMode || '' };
   }
 
   /* ============ 积分计算（与记账本同一套规则）============ */
@@ -455,6 +451,21 @@
     });
     return clamp0(p);
   }
+  // 奖池：总奖池 = poolTotalWeight（记账本里的“当前总奖池”），中奖率 = 我的投入 ÷ 总奖池
+  function poolStats(name){
+    var mine = clamp0(store.userPool[name] || 0);
+    var sum = 0, people = 0, keys = Object.keys(store.userPool || {});
+    keys.forEach(function(n){
+      var w = clamp0(store.userPool[n]);
+      if(w > 0){ sum += w; people++; }
+    });
+    var total = clamp0(store.poolTotalWeight);
+    if(total <= 0 && sum > 0) total = sum;   // 兜底：备份里没存总数时按个人权重求和
+    // 单人分享文件里“总奖池”就等于自己的投入，拿不到别人的，不能当真实奖池
+    var known = !(store.single && people <= 1 && Math.abs(total - mine) < 0.005);
+    return { total: round2(total), mine: round2(mine), people: people, known: known };
+  }
+
   function personRecords(name){
     var out = [];
     Object.keys(store.weeks).sort().reverse().forEach(function(k){
@@ -500,7 +511,6 @@
     document.getElementById('panel').style.display = 'none';
     card.style.display = multi ? '' : 'none';
     document.getElementById('switchBtn').style.display = 'none';
-    document.getElementById('exportBtn').disabled = true;
     document.getElementById('printBtn').disabled = true;
     if(!multi) return;
     var input = document.getElementById('nameInput');
@@ -516,7 +526,6 @@
     gateError('');
     renderPanel();
     document.getElementById('switchBtn').style.display = store.persons.length > 1 ? '' : 'none';
-    document.getElementById('exportBtn').disabled = false;
     document.getElementById('printBtn').disabled = false;
   }
 
@@ -541,7 +550,7 @@
     var L = ledger(name);
     var can = usable(name, ref);
     var pend = pending(name, ref);
-    var poolW = store.userPool[name] || 0;
+    var PS = poolStats(name);
 
     var total = 0, paid = 0;
     recs.forEach(function(x){ total += x.rec.amount; if(x.rec.paid) paid += x.rec.amount; });
@@ -565,16 +574,27 @@
     var pills = [];
     pills.push('<span class="pill accent">本周消费 ¥' + fmt(thisWeekTotal) + ' · ' + thisWeekCount + ' 笔</span>');
     if(pend > 0) pills.push('<span class="pill warn">下周可用 ' + fmt(pend) + ' 分</span>');
-    if(poolW > 0) pills.push('<span class="pill">奖池投入 ¥' + fmt(poolW) + '</span>');
     document.getElementById('heroPills').innerHTML = pills.join('');
 
     var hint = '本周新得积分下一周才可用；本页按“本周之前攒下的积分 − 已用积分”计算可用额度。';
     if(pend > 0) hint += '本周新得 ' + fmt(pend) + ' 分，' + fmtRange(nextMondayKey(ref)) + ' 起可用。';
     document.getElementById('usableHint').textContent = hint;
 
-    document.getElementById('poolLine').textContent = poolW > 0
-      ? '奖池投入 ¥' + fmt(poolW) + '（仅奖池模式账单按线上 5% / 线下 2% 计入；用积分抵扣的账单不计入）。'
-      : '本账本没有记录到你的奖池投入。';
+    // 抽奖奖池
+    var pct = (PS.known && PS.total > 0) ? (PS.mine / PS.total * 100) : 0;
+    document.getElementById('poolTotal').textContent = PS.known ? '¥' + fmt(PS.total) : '—';
+    document.getElementById('poolMine').textContent = '¥' + fmt(PS.mine);
+    document.getElementById('poolPct').textContent = PS.known ? pct.toFixed(2) + '%' : '—';
+    document.getElementById('poolFill').style.width = Math.min(100, pct).toFixed(2) + '%';
+    var note;
+    if(!PS.known){
+      note = '这份文件只有你自己的记录，拿不到总奖池，所以看不出中奖率；需要站点放进完整备份。';
+    }else if(PS.total <= 0){
+      note = '当前奖池为空，还没有「奖池模式」的账单。奖池由奖池模式的账单按线上 5% / 线下 2% 累积，用积分抵扣的账单不计入。';
+    }else{
+      note = '共 ' + PS.people + ' 人参与；中奖率 = 我的投入 ÷ 总奖池。奖池只由「奖池模式」的账单累积（线上 5% / 线下 2%），用积分抵扣的账单不计入。';
+    }
+    document.getElementById('poolNote').textContent = note;
 
     renderBills(recs);
     renderWeeks(recs, ref);
@@ -702,54 +722,7 @@
   }
 
   function showError(msg){
-    setSource('warn', '读取失败：' + msg, '请选择记账本「导出备份」得到的 JSON 文件');
-  }
-
-  function readFile(file){
-    if(!file) return;
-    if(!/\.json$/i.test(file.name) && file.type !== 'application/json'){
-      showError('请选择 .json 文件');
-      return;
-    }
-    var fr = new FileReader();
-    fr.onload = function(){
-      var raw;
-      try{ raw = JSON.parse(String(fr.result)); }
-      catch(e){ showError('JSON 格式不正确'); return; }
-      fileName = file.name;
-      applyData(raw, file.name, '本机文件 · ' + (file.size / 1024).toFixed(0) + ' KB');
-    };
-    fr.onerror = function(){ showError('文件读取失败'); };
-    fr.readAsText(file);
-  }
-
-  /* ============ 单人分享文件 ============ */
-  function exportMine(){
-    if(!store || !curPerson) return;
-    var name = curPerson;
-    var weeks = {};
-    Object.keys(store.weeks).forEach(function(k){
-      var arr = store.weeks[k].records.filter(function(r){ return r.person === name; });
-      if(arr.length) weeks[k] = { records: arr };
-    });
-    var out = {
-      type: 'print-book-person',
-      person: name,
-      exportedAt: new Date().toISOString(),
-      globalMode: store.mode || '',
-      weeks: weeks,
-      names: [name],
-      trash: [],
-      poolTotalWeight: store.userPool[name] || 0,
-      userPool: store.userPool[name] ? (function(){ var o = {}; o[name] = store.userPool[name]; return o; })() : {},
-      userPoint: (function(){ var o = {}; o[name] = balance(name); return o; })()
-    };
-    var blob = new Blob([JSON.stringify(out, null, 2)], { type: 'application/json' });
-    var a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = name + '_打印积分.json';
-    a.click();
-    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    setSource('warn', '读取失败：' + msg, '检查一下 data.json 是否是记账本「导出备份」得到的文件');
   }
 
   /* ============ 主题 ============ */
@@ -766,13 +739,6 @@
   applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
 
   /* ============ 交互 ============ */
-  document.getElementById('importBtn').addEventListener('click', function(){
-    document.getElementById('fileInput').click();
-  });
-  document.getElementById('fileInput').addEventListener('change', function(e){
-    readFile(e.target.files[0]);
-    e.target.value = '';
-  });
   document.getElementById('nameGo').addEventListener('click', submitGate);
   document.getElementById('nameInput').addEventListener('keydown', function(e){
     if(e.key === 'Enter'){ e.preventDefault(); submitGate(); }
@@ -783,7 +749,6 @@
     document.getElementById('panel').style.display = 'none';
     showGate('');
   });
-  document.getElementById('exportBtn').addEventListener('click', exportMine);
   document.getElementById('printBtn').addEventListener('click', function(){ window.print(); });
 
   document.querySelectorAll('.f-btn').forEach(function(b){
@@ -793,18 +758,6 @@
       curFilter = b.dataset.filter;
       if(store && curPerson) renderBills(personRecords(curPerson));
     });
-  });
-
-  // 拖拽导入
-  ['dragenter','dragover'].forEach(function(ev){
-    window.addEventListener(ev, function(e){ e.preventDefault(); document.body.classList.add('dragging'); });
-  });
-  ['dragleave','drop'].forEach(function(ev){
-    window.addEventListener(ev, function(e){ e.preventDefault(); if(ev === 'dragleave' && e.relatedTarget) return; document.body.classList.remove('dragging'); });
-  });
-  window.addEventListener('drop', function(e){
-    var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-    if(f) readFile(f);
   });
 
   /* ============ 启动：?data= / ./data.json ============ */
@@ -818,7 +771,7 @@
     }).then(function(raw){
       applyData(raw, '站点数据 ' + url, '');
     }).catch(function(){
-      setSource('warn', '还没有数据', '点右上角「导入 JSON」，或把 data.json 放在本页同目录');
+      setSource('warn', '还没有数据', '把记账本导出的 data.json 放到本页同目录即可');
       document.getElementById('panel').style.display = 'none';
       document.getElementById('emptyCard').style.display = '';
     });
