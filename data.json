@@ -173,6 +173,21 @@
           "pointUsed": 0,
           "deductAmount": 0,
           "noEarn": false
+        },
+        {
+          "id": "jr99m2m",
+          "date": "11/14",
+          "docName": "选必三拓展词汇",
+          "person": "魏峥",
+          "amount": 3,
+          "paid": true,
+          "payType": "online",
+          "modeMark": "pool",
+          "poolContrib": 0.15,
+          "pointEarned": 0,
+          "pointUsed": 0,
+          "deductAmount": 0,
+          "noEarn": false
         }
       ]
     }
@@ -180,7 +195,7 @@
   "names": [],
   "trash": [],
   "globalMode": "pool",
-  "poolTotalWeight": 1.41,
+  "poolTotalWeight": 1.56,
   "userPool": {
     "周润飞": 0.06,
     "李宇翰": 0.06,
@@ -192,7 +207,8 @@
     "鄂岱昂": 0.3,
     "靳岩杰": 0.15,
     "张其杭": 0.06,
-    "马子昂": 0.15
+    "马子昂": 0.15,
+    "魏峥": 0.15
   },
   "userPoint": {}
 }
