@@ -141,12 +141,31 @@
     },
     "2026-11-02": {
       "records": []
+    },
+    "2026-11-09": {
+      "records": [
+        {
+          "id": "5tvldli",
+          "date": "11/14",
+          "docName": "选必三拓展词汇",
+          "person": "程苏雅",
+          "amount": 3,
+          "paid": false,
+          "payType": "online",
+          "modeMark": "pool",
+          "poolContrib": 0.15,
+          "pointEarned": 0,
+          "pointUsed": 0,
+          "deductAmount": 0,
+          "noEarn": false
+        }
+      ]
     }
   },
   "names": [],
   "trash": [],
   "globalMode": "pool",
-  "poolTotalWeight": 1.2,
+  "poolTotalWeight": 1.35,
   "userPool": {
     "周润飞": 0.06,
     "李宇翰": 0.06,
@@ -154,7 +173,7 @@
     "周代勇": 0.06,
     "刘恒宇": 0.15,
     "甄琳": 0.15,
-    "程苏雅": 0.06,
+    "程苏雅": 0.21,
     "鄂岱昂": 0.3,
     "靳岩杰": 0.15,
     "张其杭": 0.06
