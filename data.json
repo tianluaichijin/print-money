@@ -188,6 +188,21 @@
           "pointUsed": 0,
           "deductAmount": 0,
           "noEarn": false
+        },
+        {
+          "id": "udm4sqo",
+          "date": "11/14",
+          "docName": "选必三拓展词汇",
+          "person": "刘恒宇",
+          "amount": 3,
+          "paid": true,
+          "payType": "online",
+          "modeMark": "pool",
+          "poolContrib": 0.15,
+          "pointEarned": 0,
+          "pointUsed": 0,
+          "deductAmount": 0,
+          "noEarn": false
         }
       ]
     }
@@ -195,13 +210,13 @@
   "names": [],
   "trash": [],
   "globalMode": "pool",
-  "poolTotalWeight": 1.56,
+  "poolTotalWeight": 1.71,
   "userPool": {
     "周润飞": 0.06,
     "李宇翰": 0.06,
     "刘一弘": 0.15,
     "周代勇": 0.06,
-    "刘恒宇": 0.15,
+    "刘恒宇": 0.3,
     "甄琳": 0.15,
     "程苏雅": 0.12,
     "鄂岱昂": 0.3,
