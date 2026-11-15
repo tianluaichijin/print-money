@@ -60,6 +60,27 @@
   button.ghost:hover:not(:disabled){background:var(--ghost-hover)}
   button.small{padding:6px 12px;font-size:13px}
   .f-btn.active{background:var(--accent);color:#fff;box-shadow:0 0 0 3px var(--accent-soft)}
+  /* 主题切换：圆形从按钮扩散 / 向按钮收拢（与记账本同一套效果） */
+  .theme-btn{display:inline-flex;align-items:center;gap:5px}
+  .theme-btn .ico{font-size:14px;line-height:1}
+  .card,.stat{transition:background .25s ease, border-color .2s ease}
+  ::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal;will-change:clip-path,opacity}
+  html.theme-to-light::view-transition-old(root){z-index:2}
+  html.theme-to-light::view-transition-new(root){z-index:1}
+  html.theme-to-dark::view-transition-old(root){z-index:1}
+  html.theme-to-dark::view-transition-new(root){z-index:2}
+  .theme-btn .ico{display:inline-block;transition:transform .6s cubic-bezier(.22,1,.36,1)}
+  .theme-btn.spinning .ico{transform:rotate(180deg) scale(.9)}
+  .theme-ripple{
+    position:fixed;inset:0;z-index:400;pointer-events:none;
+    --rx:50%; --ry:50%; --r:0px;
+    -webkit-mask-image:radial-gradient(circle var(--r) at var(--rx) var(--ry), transparent calc(var(--r) - 1px), #000 var(--r));
+    mask-image:radial-gradient(circle var(--r) at var(--rx) var(--ry), transparent calc(var(--r) - 1px), #000 var(--r));
+  }
+  .theme-ripple.cover{
+    -webkit-mask-image:radial-gradient(circle var(--r) at var(--rx) var(--ry), #000 calc(var(--r) - 1px), transparent var(--r));
+    mask-image:radial-gradient(circle var(--r) at var(--rx) var(--ry), #000 calc(var(--r) - 1px), transparent var(--r));
+  }
   .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
   .stat .value.accent{color:var(--accent)}
   .share-bar{height:6px;border-radius:4px;background:var(--track);margin-top:12px;overflow:hidden}
@@ -197,7 +218,7 @@
     <div class="sub">只读查看 · 积分与每笔打印账单<span id="busuanzi_container_site_pv" style="display:none"> | 访问：<span id="busuanzi_value_site_pv"></span> 次</span><span id="busuanzi_container_site_uv" style="display:none"> | 访客：<span id="busuanzi_value_site_uv"></span> 人</span></div>
   </div>
   <div class="top-actions">
-    <button class="ghost small" id="themeBtn" title="切换深色 / 浅色" aria-pressed="false"><span id="themeText">🌙 深色</span></button>
+    <button class="ghost small theme-btn" id="themeBtn" title="切换深色 / 浅色模式" aria-pressed="false"><span class="ico" id="themeIcon">🌙</span><span id="themeText">深色</span></button>
     <button class="ghost small" id="switchBtn" style="display:none">换个人</button>
     <button class="ghost small" id="printBtn" disabled>打印</button>
   </div>
@@ -725,18 +746,145 @@
     setSource('warn', '读取失败：' + msg, '检查一下 data.json 是否是记账本「导出备份」得到的文件');
   }
 
-  /* ============ 主题 ============ */
-  function applyTheme(t){
-    document.documentElement.setAttribute('data-theme', t);
-    var dark = t === 'dark';
-    document.getElementById('themeText').textContent = dark ? '☀️ 浅色' : '🌙 深色';
-    document.getElementById('themeBtn').setAttribute('aria-pressed', dark ? 'true' : 'false');
-    try{ localStorage.setItem(THEME_KEY, t); }catch(e){}
+  /* ============ 深色 / 浅色（与记账本同一套切换效果） ============ */
+  var themeBtn = document.getElementById('themeBtn');
+  var themeIcon = document.getElementById('themeIcon');
+  var themeText = document.getElementById('themeText');
+  var themeSeq = 0;
+  var THEME_DUR = 640;
+  var THEME_EASE = 'cubic-bezier(.22,1,.36,1)';
+
+  function currentTheme(){
+    return document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
   }
-  document.getElementById('themeBtn').addEventListener('click', function(){
-    applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+
+  var activeRipple = null;
+  // 兜底圆环：覆盖旧主题底色，用圆形遮罩露出 / 遮盖页面
+  function playRipple(goingDark, x, y, radius, oldBg){
+    if(activeRipple){ try{ activeRipple.remove(); }catch(e){} activeRipple = null; }
+    if(document.hidden) return;   // 后台标签页不播动画，避免遮罩卡住
+    var el = document.createElement('div');
+    el.className = 'theme-ripple ' + (goingDark ? 'pierce' : 'cover');
+    el.style.background = oldBg;
+    el.style.setProperty('--rx', x + 'px');
+    el.style.setProperty('--ry', y + 'px');
+    el.style.setProperty('--r', (goingDark ? 0.5 : radius) + 'px');
+    document.body.appendChild(el);
+    activeRipple = el;
+    var kill = setTimeout(function(){ try{ el.remove(); }catch(e){} if(activeRipple === el) activeRipple = null; }, THEME_DUR + 280);
+    var t0 = performance.now();
+    var ease = function(p){ return 1 - Math.pow(1 - p, 3); };
+    var frame = function(now){
+      if(!el.isConnected){ clearTimeout(kill); return; }
+      var p = Math.min(1, (now - t0) / THEME_DUR);
+      var r = goingDark ? radius * ease(p) : radius * (1 - ease(p));
+      el.style.setProperty('--r', Math.max(r, 0.5) + 'px');
+      if(p < 1) requestAnimationFrame(frame);
+      else { clearTimeout(kill); el.remove(); if(activeRipple === el) activeRipple = null; }
+    };
+    requestAnimationFrame(frame);
+  }
+
+  function applyTheme(t, persist, originEl){
+    var root = document.documentElement;
+    var goingDark = t === 'dark';
+    var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var prevBg = getComputedStyle(root).getPropertyValue('--bg').trim() || '#f6f7f9';
+    var seq = ++themeSeq;
+    var commit = function(){
+      root.setAttribute('data-theme', t);
+      themeIcon.textContent = goingDark ? '☀️' : '🌙';
+      themeText.textContent = goingDark ? '浅色' : '深色';
+      themeBtn.setAttribute('aria-pressed', goingDark ? 'true' : 'false');
+      if(persist){ try{ localStorage.setItem(THEME_KEY, t); }catch(e){} }
+    };
+    var cleanup = function(){ if(themeSeq === seq) root.classList.remove('theme-to-dark', 'theme-to-light'); };
+
+    // 没有触发元素 / 用户要求减少动效：直接切换
+    if(!originEl || reduce){
+      commit();
+      return;
+    }
+    var rect = originEl.getBoundingClientRect();
+    var x = rect.left + rect.width / 2;
+    var y = rect.top + rect.height / 2;
+    var radius = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+
+    // 不支持 View Transitions：用自绘圆环
+    if(typeof document.startViewTransition !== 'function'){
+      commit();
+      playRipple(goingDark, x, y, radius, prevBg);
+      return;
+    }
+
+    var committed = false, settled = false, watchdog = null, readyTimer = null, vt = null;
+    var update = function(){
+      if(committed) return;
+      committed = true;
+      if(watchdog) clearTimeout(watchdog);
+      commit();
+    };
+    var fallbackToRipple = function(){
+      if(settled) return;
+      settled = true;
+      clearTimeout(readyTimer);
+      clearTimeout(watchdog);
+      if(!committed){ committed = true; commit(); }
+      try{ vt.skipTransition(); }catch(e){}
+      cleanup();
+      playRipple(goingDark, x, y, radius, prevBg);
+    };
+
+    root.classList.remove('theme-to-dark', 'theme-to-light');
+    root.classList.add(goingDark ? 'theme-to-dark' : 'theme-to-light');
+    try{ vt = document.startViewTransition(update); }
+    catch(e){ fallbackToRipple(); return; }
+
+    watchdog = setTimeout(function(){ update(); }, 250);
+    readyTimer = setTimeout(fallbackToRipple, 420);
+
+    vt.ready.then(function(){
+      if(settled) return;
+      settled = true;
+      clearTimeout(readyTimer);
+      try{
+        if(goingDark){
+          root.animate([
+            { clipPath: 'circle(0px at ' + x + 'px ' + y + 'px)', opacity: 0.55 },
+            { clipPath: 'circle(' + (radius * 0.72) + 'px at ' + x + 'px ' + y + 'px)', opacity: 1, offset: 0.72 },
+            { clipPath: 'circle(' + radius + 'px at ' + x + 'px ' + y + 'px)', opacity: 1 }
+          ], { duration: THEME_DUR, easing: THEME_EASE, fill: 'both', pseudoElement: '::view-transition-new(root)' });
+        }else{
+          root.animate([
+            { clipPath: 'circle(' + radius + 'px at ' + x + 'px ' + y + 'px)', opacity: 1 },
+            { clipPath: 'circle(' + (radius * 0.28) + 'px at ' + x + 'px ' + y + 'px)', opacity: 0.85, offset: 0.62 },
+            { clipPath: 'circle(0px at ' + x + 'px ' + y + 'px)', opacity: 0.5 }
+          ], { duration: THEME_DUR, easing: THEME_EASE, fill: 'both', pseudoElement: '::view-transition-old(root)' });
+        }
+      }catch(err){
+        playRipple(goingDark, x, y, radius, prevBg);
+      }
+    }).catch(function(){});
+
+    vt.finished.then(function(){ clearTimeout(watchdog); cleanup(); }).catch(cleanup);
+    setTimeout(cleanup, THEME_DUR + 700);
+  }
+
+  function initTheme(){
+    var t = null;
+    try{ t = localStorage.getItem(THEME_KEY); }catch(e){}
+    if(t !== 'dark' && t !== 'light'){
+      t = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    }
+    applyTheme(t, false);   // 首次打开跟随系统，不算“用户选择”，不写入本地
+  }
+
+  themeBtn.addEventListener('click', function(){
+    themeBtn.classList.add('spinning');
+    setTimeout(function(){ themeBtn.classList.remove('spinning'); }, 650);
+    applyTheme(currentTheme() === 'dark' ? 'light' : 'dark', true, themeBtn);
   });
-  applyTheme(document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light');
+  initTheme();
 
   /* ============ 交互 ============ */
   document.getElementById('nameGo').addEventListener('click', submitGate);
