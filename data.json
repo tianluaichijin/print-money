@@ -147,7 +147,7 @@
           "docName": "选必三拓展词汇",
           "person": "程苏雅",
           "amount": 3,
-          "paid": false,
+          "paid": true,
           "payType": "offline",
           "modeMark": "pool",
           "poolContrib": 0.06,
@@ -217,6 +217,9 @@
           "noEarn": false
         }
       ]
+    },
+    "2026-11-16": {
+      "records": []
     }
   },
   "names": [],
