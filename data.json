@@ -356,6 +356,21 @@
           "noEarn": false
         },
         {
+          "id": "pqemml7",
+          "date": "11/21",
+          "docName": "英语近反义词",
+          "person": "周代勇",
+          "amount": 1,
+          "paid": false,
+          "payType": "offline",
+          "modeMark": "pool",
+          "poolContrib": 0.02,
+          "pointEarned": 0,
+          "pointUsed": 0,
+          "deductAmount": 0,
+          "noEarn": false
+        },
+        {
           "id": "xz42a6a",
           "date": "11/21",
           "docName": "英语近反义词（单面）",
@@ -436,12 +451,12 @@
   "names": [],
   "trash": [],
   "globalMode": "pool",
-  "poolTotalWeight": 3.3,
+  "poolTotalWeight": 3.32,
   "userPool": {
     "周润飞": 0.06,
     "李宇翰": 0.22,
     "刘一弘": 0.53,
-    "周代勇": 0.14,
+    "周代勇": 0.16,
     "刘恒宇": 0.3,
     "甄琳": 0.23,
     "程苏雅": 0.12,
