@@ -339,6 +339,21 @@
           "pointUsed": 0,
           "deductAmount": 0,
           "noEarn": false
+        },
+        {
+          "id": "r0fjn6a",
+          "date": "11/21",
+          "docName": "英语近反义词",
+          "person": "魏峥",
+          "amount": 1,
+          "paid": true,
+          "payType": "online",
+          "modeMark": "pool",
+          "poolContrib": 0.05,
+          "pointEarned": 0,
+          "pointUsed": 0,
+          "deductAmount": 0,
+          "noEarn": false
         }
       ]
     }
@@ -346,7 +361,7 @@
   "names": [],
   "trash": [],
   "globalMode": "pool",
-  "poolTotalWeight": 2.66,
+  "poolTotalWeight": 2.71,
   "userPool": {
     "周润飞": 0.06,
     "李宇翰": 0.22,
@@ -359,7 +374,7 @@
     "靳岩杰": 0.15,
     "张其杭": 0.14,
     "马子昂": 0.15,
-    "魏峥": 0.15,
+    "魏峥": 0.2,
     "孙夕凡": 0.2,
     "彭钰炫": 0.38
   },
