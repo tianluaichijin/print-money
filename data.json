@@ -281,6 +281,36 @@
           "noEarn": false
         },
         {
+          "id": "oqw9mm2",
+          "date": "11/22",
+          "docName": "二年级续写训练双面打印",
+          "person": "马子昂",
+          "amount": 4,
+          "paid": true,
+          "payType": "online",
+          "modeMark": "pool",
+          "poolContrib": 0.2,
+          "pointEarned": 0,
+          "pointUsed": 0,
+          "deductAmount": 0,
+          "noEarn": false
+        },
+        {
+          "id": "tdt5hg3",
+          "date": "11/22",
+          "docName": "二年级续写训练双面打印",
+          "person": "马子昂",
+          "amount": 4,
+          "paid": true,
+          "payType": "online",
+          "modeMark": "pool",
+          "poolContrib": 0.2,
+          "pointEarned": 0,
+          "pointUsed": 0,
+          "deductAmount": 0,
+          "noEarn": false
+        },
+        {
           "id": "jh30wil",
           "date": "11/21",
           "docName": "二年级续写训练单面打印",
@@ -444,6 +474,36 @@
           "pointUsed": 0,
           "deductAmount": 0,
           "noEarn": false
+        },
+        {
+          "id": "jkgup6h",
+          "date": "11/22",
+          "docName": "英语近反义词+音标",
+          "person": "马子昂",
+          "amount": 1.6,
+          "paid": true,
+          "payType": "online",
+          "modeMark": "pool",
+          "poolContrib": 0.08,
+          "pointEarned": 0,
+          "pointUsed": 0,
+          "deductAmount": 0,
+          "noEarn": false
+        },
+        {
+          "id": "3hw813v",
+          "date": "11/22",
+          "docName": "英语近反义词+音标",
+          "person": "马子昂",
+          "amount": 1.6,
+          "paid": true,
+          "payType": "online",
+          "modeMark": "pool",
+          "poolContrib": 0.08,
+          "pointEarned": 0,
+          "pointUsed": 0,
+          "deductAmount": 0,
+          "noEarn": false
         }
       ]
     }
@@ -451,7 +511,7 @@
   "names": [],
   "trash": [],
   "globalMode": "pool",
-  "poolTotalWeight": 3.32,
+  "poolTotalWeight": 3.88,
   "userPool": {
     "周润飞": 0.06,
     "李宇翰": 0.22,
@@ -463,11 +523,12 @@
     "鄂岱昂": 0.38,
     "靳岩杰": 0.15,
     "张其杭": 0.16,
-    "马子昂": 0.15,
+    "马子昂": 0.71,
     "魏峥": 0.23,
     "孙夕凡": 0.2,
     "彭钰炫": 0.38,
     "王依一": 0.05
   },
-  "userPoint": {}
+  "userPoint": {},
+  "releaseLog": []
 }
