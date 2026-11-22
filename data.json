@@ -504,6 +504,21 @@
           "pointUsed": 0,
           "deductAmount": 0,
           "noEarn": false
+        },
+        {
+          "id": "r4ffnzw",
+          "date": "11/22",
+          "docName": "英语近反义词+音标",
+          "person": "孙夕凡",
+          "amount": 1.6,
+          "paid": true,
+          "payType": "online",
+          "modeMark": "pool",
+          "poolContrib": 0.08,
+          "pointEarned": 0,
+          "pointUsed": 0,
+          "deductAmount": 0,
+          "noEarn": false
         }
       ]
     }
@@ -511,7 +526,7 @@
   "names": [],
   "trash": [],
   "globalMode": "pool",
-  "poolTotalWeight": 3.88,
+  "poolTotalWeight": 3.96,
   "userPool": {
     "周润飞": 0.06,
     "李宇翰": 0.22,
@@ -525,7 +540,7 @@
     "张其杭": 0.16,
     "马子昂": 0.71,
     "魏峥": 0.23,
-    "孙夕凡": 0.2,
+    "孙夕凡": 0.28,
     "彭钰炫": 0.38,
     "王依一": 0.05
   },
